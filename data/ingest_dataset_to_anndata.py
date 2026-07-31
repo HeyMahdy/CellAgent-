@@ -36,7 +36,9 @@ def ingest_dataset_to_anndata(path: str) -> ad.AnnData:
     elif ext == '.h5':
         # 10x Genomics also distributes data as compressed HDF5 files (.h5)
         print("HDF5 file detected. Attempting to load as 10x Genomics H5...")
-        return sc.read_10x_h5(path)
+        adata = sc.read_10x_h5(path)
+        adata.var_names_make_unique()
+        return adata
 
     elif ext == '.csv':
         print("CSV file detected. Loading...")
