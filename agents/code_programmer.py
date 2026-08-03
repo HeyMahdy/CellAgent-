@@ -54,6 +54,17 @@ Rules:
   `save_adata(adata, ARTIFACT_DIR / f"step_{STEP_ID}_adata.h5ad")`. Never
   call `adata.write_h5ad` directly: generated tables or nested dictionaries
   in `adata.uns` can make an otherwise successful step impossible to save.
+- For quality-control steps, if you pass `qc_vars=["mt"]` to
+  `scanpy.pp.calculate_qc_metrics`, you MUST first create the matching boolean
+  variable annotation on the exact object passed to Scanpy; for example,
+  `adata.var["mt"] = adata.var_names.str.upper().str.startswith("MT-")`.
+  Do this even when the result contains no mitochondrial genes; an all-False
+  column is valid. Never pass `"mt"` in `qc_vars` unless that column exists
+  in that object's `var` table.
+- For normalization/HVG steps, create `adata.var["highly_variable"]` with
+  `scanpy.pp.highly_variable_genes(...)` and save the changed AnnData object.
+  Downstream PCA/clustering steps may rely on that column because each sandbox
+  kernel replays only code from successful earlier steps.
 - Return code only through the structured response. Do not include Markdown.
 """
 
