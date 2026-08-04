@@ -1,5 +1,4 @@
 import anndata
-import scanpy as sc
 import celltypist
 from celltypist import models
 

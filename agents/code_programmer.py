@@ -42,14 +42,20 @@ Rules:
   commands, subprocesses, notebook magics, or absolute paths. Do not make
   network calls yourself; an explicitly selected registered tool may do so if
   its documented preconditions are met.
-- Do not delete or overwrite source data. Write reports, figures, and AnnData
-  outputs only below ARTIFACT_DIR.
+- Do not delete or overwrite source data. Do not generate, plot, or save any 
+  figures, charts, CSV reports, or JSON outputs. Your sole responsibility is 
+  to mutate and update the `adata` object.
 - Validate required AnnData fields before using them and raise clear ValueError
   messages when a prerequisite is absent.
 - Keep the work specific to the current subtask; do not repeat completed work.
 - Use deterministic random_state values where supported.
-- For plots, save them with `fig.savefig(ARTIFACT_DIR / "...")` and close the
-  figure. Do not rely only on interactive display.
+- MULTIPLE TOOL EXECUTION: If the current subtask explicitly requests running 
+  "multiple cell-type annotation approaches", "combining evidence", or similar 
+  multi-tool workflows, you MUST import, instantiate, and execute ALL available 
+  custom tools provided in your tool registry for that step. Execute them 
+  sequentially so that each tool adds its respective annotation column to `adata.obs`. 
+  Executing the tools is the entirety of this subtask. Do not write any additional 
+  custom coding, consensus evaluation, or downstream analysis after the tools are called.
 - When the subtask makes a meaningful change to adata, save it as
   `save_adata(adata, ARTIFACT_DIR / f"step_{STEP_ID}_adata.h5ad")`. Never
   call `adata.write_h5ad` directly: generated tables or nested dictionaries
@@ -66,8 +72,8 @@ Rules:
   Downstream PCA/clustering steps may rely on that column because each sandbox
   kernel replays only code from successful earlier steps.
 - Return code only through the structured response. Do not include Markdown.
+USAGE EXAMPLES: You MUST closely follow the `usage_example` block provided for each tool. It contains the exact standard library imports, tool imports, and precondition checks required to prevent kernel crashes. Copy its structure.
 """
-
 
 def _tool_docs(selected_tool: Any) -> str:
     if not selected_tool:
@@ -87,7 +93,7 @@ class CodeProgrammerAgent:
         self,
         *,
         subtask: dict[str, Any],
-        selected_tool: Any = None,
+        available_tools: Any = None,
         global_memory: Iterable[dict[str, Any]] = (),
         local_memory: Iterable[dict[str, Any]] = (),
     ) -> CodeProposal:
@@ -101,7 +107,7 @@ class CodeProgrammerAgent:
             HumanMessage(
                 content=(
                     f"CURRENT SUBTASK:\n{subtask}\n\n"
-                    f"SELECTED TOOL DOCUMENTATION:\n{_tool_docs(selected_tool)}\n\n"
+                    f"available_tools:\n{_tool_docs(available_tools)}\n\n"
                     f"COMPLETED STEP SUMMARIES:\n{completed}\n\n"
                     f"RECENT FAILED ATTEMPTS / ERRORS:\n{list(local_memory)[-3:]}"
                 )
@@ -119,7 +125,7 @@ def code_programmer_node(state: CellAgentState) -> dict[str, Any]:
     agent = CodeProgrammerAgent()
     proposal = agent.generate(
         subtask=current_task,
-        selected_tool=state.get("tool_info"),
+        available_tools = state.get("tools_registry",[]),
         global_memory=state.get("global_code_memory", []),
         local_memory=state.get("local_memory", []),
     )
