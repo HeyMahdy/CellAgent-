@@ -5,8 +5,7 @@ from agents.loop import loop_node, route_from_loop
 from agents.too_agent import tool_selector_node
 from agents.code_programmer import code_programmer_node
 from agents.sandbox import sandbox_node, route_after_sandbox
-from agents.annotation_output import annotation_output_node
-from agents.visualization_output import visualization_output_node
+from agents.evaluator import evaluator_node
 from langgraph.graph import END, START, StateGraph
 
 workflow = StateGraph(CellAgentState)
@@ -17,8 +16,7 @@ workflow.add_node("loop_node", loop_node)
 workflow.add_node("tool_selector_node", tool_selector_node)
 workflow.add_node("code_programmer_node", code_programmer_node)
 workflow.add_node("sandbox_node", sandbox_node)
-workflow.add_node("annotation_output_node", annotation_output_node)
-workflow.add_node("visualization_output_node", visualization_output_node)
+workflow.add_node("evaluator", evaluator_node)
 
 # 1. Start -> Planner -> Loop
 workflow.add_edge(START, "planner_node")
@@ -30,7 +28,7 @@ workflow.add_conditional_edges(
     route_from_loop,
     {
         "tool_selector_node": "tool_selector_node",
-        "annotation_output_node": "annotation_output_node",
+        "evaluator": "evaluator",
     },
 )
 
@@ -46,7 +44,6 @@ workflow.add_conditional_edges(
         "loop_node": "loop_node",
     },
 )
-workflow.add_edge("annotation_output_node", "visualization_output_node")
-workflow.add_edge("visualization_output_node", END)
+workflow.add_edge("evaluator", END)
 
 app_graph = workflow.compile()

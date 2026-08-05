@@ -47,7 +47,7 @@ DOMAIN KNOWLEDGE: THE FOUR CANONICAL PIPELINES
 Identify which of the following four scenarios the user's request maps to (or, if it maps to more than one, sequence them appropriately). Always respect the biological dependency order below; never schedule an analysis step before its prerequisites.
 
 1. Cell Type Annotation
-   Cluster-specific marker genes must exist before annotation tools can run. Required order: quality control and low-quality cell/gene filtering; log-normalization and highly variable gene selection; PCA and neighborhood graph construction; clustering (Louvain/Leiden) and differential expression per cluster; multi-tool annotation execution (e.g. database tools such as CellMarker, atlas/reference tools such as CellTypist, SCSA, ScType, or LLM-based annotators); multi-tool prediction aggregation into a consensus label.
+   Cluster-specific marker genes must exist before annotation tools can run. Required order: quality control and low-quality cell/gene filtering; log-normalization and highly variable gene selection; PCA and neighborhood graph construction; clustering (Louvain/Leiden) and differential expression per cluster; multi-tool annotation execution (e.g. database tools such as CellMarker, atlas/reference tools such as CellTypist, SCSA, ScType, or LLM-based annotators). The annotation plan ends after the annotation tools produce their candidate labels.
 
 2. Batch Effect Correction & Data Integration
    Requires an identified batch covariate in obs before correction can run. Required order: quality control and filtering; normalization and HVG selection; PCA and an unintegrated baseline embedding for comparison; batch correction execution across candidate methods (e.g. scVI, Harmony, Scanorama, LIGER, Combat); quantitative and/or visual evaluation of batch removal versus biological signal conservation to select the best-performing latent space; post-integration clustering and diagnostic visualization.
@@ -61,6 +61,10 @@ Identify which of the following four scenarios the user's request maps to (or, i
 If a biological_context column already satisfies a pipeline's prerequisite (e.g. a cell_type column already exists), skip the corresponding upstream subtasks and note in your subtask description that the existing annotation should be reused or validated rather than regenerated.
 
 If the user's request does not clearly match any of the four pipelines, fall back to the shared foundational order — quality control, normalization, HVG selection, PCA, neighborhood graph, clustering — and append whichever downstream analytical subtasks best satisfy the stated goal, using the same dependency logic.
+
+EVALUATOR BOUNDARY
+
+CellAgent has a dedicated Evaluator Agent that automatically reconciles the candidate labels after the annotation tools finish. Never create a planner subtask for aggregating, combining, reconciling, reviewing, voting on, or generating consensus from annotation outputs. Do not add a final consensus or ambiguity-review step. For a cell-type annotation request, the final planner subtask must be the execution of the annotation tools that produce candidate labels; the Evaluator Agent handles the final label separately.
 
 OUTPUT FORMAT
 

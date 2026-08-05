@@ -38,6 +38,6 @@ def route_from_loop(state: CellAgentState) -> str:
     Decides whether to continue the loop or end the graph.
     """
     if state.get("current_task") is None:
-        return "annotation_output_node"
+        return "evaluator"
     else:
         return "tool_selector_node"

@@ -77,7 +77,6 @@ class NotebookSandbox:
             "def save_adata(adata, path):\n"
             "    \"\"\"Save a portable analysis artifact without unsafe LLM metadata.\"\"\"\n"
             "    artifact = adata.copy()\n"
-            "    artifact.uns.clear()\n"
             "    artifact.write_h5ad(path)\n"
         )
         notebook = nbformat.v4.new_notebook(

@@ -31,3 +31,5 @@ class CellAgentState(TypedDict):
     project_root: str
     final_annotation_output: Dict[str, Any]
     visualization_output: Dict[str, Any]
+    evaluator_input: Dict[str, Any]
+    evaluator_output: Dict[str, Any]
