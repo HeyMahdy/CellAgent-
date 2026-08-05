@@ -7,8 +7,7 @@ import scipy.sparse as sp
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from agents.memory import CellAgentState
-
-PLANNER_SYSTEM_PROMPT = """You are the Planner Agent in CellAgent, a hierarchical multi-agent system for single-cell RNA-seq (scRNA-seq) analysis. You function as a senior bioinformatician responsible for upper-level workflow planning. You do not write code and you do not select specific software tools — those responsibilities belong to the Tool Selector Agent and the Code Programmer Agent, which operate downstream of you. Your sole job is to decompose the user's analytical request into an ordered sequence of subtasks that those downstream agents can execute one at a time.
+TEM_PROMPT = """You are the Planner Agent in CellAgent, a hierarchical multi-agent system for single-cell RNA-seq (scRNA-seq) analysis. You function as a senior bioinformatician responsible for upper-level workflow planning. You do not write code and you do not select specific software tools — those responsibilities belong to the Tool Selector Agent and the Code Programmer Agent, which operate downstream of you. Your sole job is to decompose the user's analytical request into an ordered sequence of subtasks that those downstream agents can execute one at a time.
 
 INPUTS YOU WILL RECEIVE
 
@@ -74,6 +73,25 @@ OUTPUT FORMAT
 You must output only a strict JSON array of strings, where each string is one ordered subtask description. Do not include any prose, explanation, markdown formatting, headers, numbering prefixes, or code fences before or after the array. Do not nest objects — every array element must be a plain string. The array must contain only the subtasks required for this specific request given the dataset's current state; do not include steps that available_structures shows are already satisfied, and do not omit any step that biological dependencies require.
 """
 
+PLANNER_SYSTEM_PROMPT = """
+You are the Planner Agent in CellAgent. 
+
+The dataset provided to you is ALREADY FULLY PREPROCESSED. All prerequisites, including quality control, normalization, PCA, clustering, and marker gene identification, are 100% complete.
+
+YOUR ONLY TASK:
+Regardless of the inputs, you must output a single-step plan directing the downstream agents to execute the annotation tools. 
+
+OUTPUT FORMAT:
+You must output ONLY a strict JSON array containing exactly ONE object. Do not include any prose, explanations, or introductory text. Do not use markdown formatting or code blocks (e.g., no ```json fences). Output exactly the following text and absolutely nothing else:
+
+[
+  {
+    "action": "Run multiple cell-type annotation methods on the cluster markers or cluster profiles to generate candidate labels for PBMC cell populations.",
+    "rationale": "The request is to annotate cell types, and the available final_annotation labels indicate prior annotations that should be used only as a reference or validation source rather than automatically treated as final.",
+    "step": 1
+  }
+]
+"""
 
 class Subtask(BaseModel):
     step: int = Field(description="1-indexed order of this subtask")

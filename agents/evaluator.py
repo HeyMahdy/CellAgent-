@@ -30,7 +30,6 @@ class EvaluationResult(BaseModel):
 llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
 structured_llm = llm.with_structured_output(EvaluationResult)
 
-ANNOTATED_ADATA_PATH = "/content/cellagent_artifacts/step_5_adata.h5ad"
 
 
 def _json_value(value):
@@ -40,7 +39,7 @@ def _json_value(value):
 
 
 def _build_evaluator_input(state: CellAgentState) -> dict:
-    adata = ad.read_h5ad(ANNOTATED_ADATA_PATH)
+    adata = state["state"]
     if "rank_genes_groups" not in adata.uns:
         raise ValueError("The final AnnData artifact is missing rank_genes_groups.")
 

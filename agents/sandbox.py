@@ -5,7 +5,7 @@ generated code for trusted users/datasets in a runtime you control.
 """
 
 from __future__ import annotations
-
+import scanpy as sc
 import tempfile
 import traceback
 from dataclasses import asdict, dataclass
@@ -144,30 +144,52 @@ def sandbox_node(state: dict) -> dict:
     proposal = state.get("code_proposal")
     if not proposal:
         return {"sandbox_result": None}
+        
+    current_step = state.get("current_task_index", 0)
+    artifact_dir = state.get("artifact_dir")
+    
     sandbox = NotebookSandbox(
-        artifact_dir=state.get("artifact_dir"),
+        artifact_dir=artifact_dir,
         timeout_seconds=state.get("sandbox_timeout_seconds", 900),
         project_root=state.get("project_root"),
     )
+    
     result = sandbox.execute(
         proposal["code"],
         dataset_path=state["dataset_path"],
-        step_id=state.get("current_task_index", 0),
+        step_id=current_step,
     )
+    
     payload = asdict(result)
+    
     if result.success:
+        # --- START SYNC LOGIC ---
+        updated_adata = state.get("adata") # Fallback to existing adata
+        expected_artifact_path = Path(artifact_dir) / f"step_{current_step}_adata.h5ad"
+        
+        if expected_artifact_path.exists():
+            print(f"Syncing updated AnnData from sandbox to LangGraph state: {expected_artifact_path}")
+            updated_adata = sc.read_h5ad(expected_artifact_path)
+        # --- END SYNC LOGIC ---
+
         memory_item = {
-            "step": state.get("current_task_index", 0),
+            "step": current_step,
             "summary": proposal["summary"],
             "code": proposal["code"],
             "artifacts": result.artifacts,
         }
-        return {"sandbox_result": payload, "global_code_memory": [*state.get("global_code_memory", []), memory_item]}
+        
+        return {
+            "sandbox_result": payload, 
+            "global_code_memory": [*state.get("global_code_memory", []), memory_item],
+            "adata": updated_adata  # Overwrites the old adata in LangGraph!
+        }
+        
     return {
         "sandbox_result": payload,
         "local_memory": [
             *state.get("local_memory", []),
-            {"step": state.get("current_task_index", 0), "error": result.error, "stdout": result.stdout[-4000:]},
+            {"step": current_step, "error": result.error, "stdout": result.stdout[-4000:]},
         ],
     }
 
