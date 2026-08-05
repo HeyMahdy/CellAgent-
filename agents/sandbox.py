@@ -163,13 +163,13 @@ def sandbox_node(state: dict) -> dict:
     payload = asdict(result)
     
     if result.success:
-        # --- START SYNC LOGIC ---
-        updated_adata = state.get("adata") # Fallback to existing adata
+
+        
+        
         expected_artifact_path = Path(artifact_dir) / f"step_{current_step}_adata.h5ad"
         
-        if expected_artifact_path.exists():
-            print(f"Syncing updated AnnData from sandbox to LangGraph state: {expected_artifact_path}")
-            updated_adata = sc.read_h5ad(expected_artifact_path)
+
+        updated_adata = sc.read_h5ad(expected_artifact_path)
         # --- END SYNC LOGIC ---
 
         memory_item = {

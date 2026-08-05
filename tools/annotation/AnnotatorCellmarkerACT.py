@@ -13,7 +13,7 @@ def AnnotatorCellmarkerACT(
     top_n: int = 50
 ) -> anndata.AnnData:
     """
-    AnnotatorCellmarkerACT(adata, species, tissue_type, db_uri, cluster_key='leiden', top_n=50) -> anndata.AnnData
+  AnnotatorCellmarkerACT(adata, species, tissue_type, db_uri, cluster_key='leiden', top_n=50) -> anndata.AnnData
     
     Annotates single-cell clusters by comparing top Differentially Expressed Genes (DEGs) 
     against the CellMarker 2.0 PostgreSQL database.
@@ -21,7 +21,7 @@ def AnnotatorCellmarkerACT(
     Parameters:
     - adata: anndata.AnnData containing the scRNA-seq data.
     - species: str, e.g., 'Human' or 'Mouse'.
-    - tissue_type: str, e.g., 'Pancreas' or 'Brain'.
+    - tissue_type: str, e.g., 'Pancreas', 'Brain', or 'All'. If 'All', the tissue filter is dropped and all markers for the species are queried.
     - db_uri: str, PostgreSQL connection URI (e.g., 'postgresql://user:pass@host:port/dbname').
     - cluster_key: str, the column in adata.obs containing cluster assignments.
     - top_n: int, number of top DEGs to extract per cluster for scoring.

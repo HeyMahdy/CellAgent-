@@ -39,7 +39,7 @@ def _json_value(value):
 
 
 def _build_evaluator_input(state: CellAgentState) -> dict:
-    adata = state["state"]
+    adata = state["adata"]
     if "rank_genes_groups" not in adata.uns:
         raise ValueError("The final AnnData artifact is missing rank_genes_groups.")
 
