@@ -30,7 +30,7 @@ class EvaluationResult(BaseModel):
 llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
 structured_llm = llm.with_structured_output(EvaluationResult)
 
-ANNOTATED_ADATA_PATH = "/content/cellagent_artifacts/step_6_adata.h5ad"
+ANNOTATED_ADATA_PATH = "/content/cellagent_artifacts/step_5_adata.h5ad"
 
 
 def _json_value(value):
