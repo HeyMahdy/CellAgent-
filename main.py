@@ -118,6 +118,7 @@ async def run_cell_agent(payload: AgentRequest):
         "project_root": str(Path(__file__).resolve().parent),
         "final_annotation_output": None,
         "visualization_output": None,
+        "final_labels": {},
     }
 
     # Keep FastAPI's event loop responsive so /api/stop-all can be handled
@@ -128,11 +129,4 @@ async def run_cell_agent(payload: AgentRequest):
     print("=== PLANNER OUTPUT ===")
     print(json.dumps(result["planner_output"], indent=2))
 
-    return {
-        "planner_output": result.get("planner_output", []),
-        "sandbox_result": result.get("sandbox_result"),
-        "artifacts": (result.get("sandbox_result") or {}).get("artifacts", []),
-        "failed_attempts": result.get("local_memory", []),
-        "final_annotation_output": result.get("final_annotation_output"),
-        "visualization_output": result.get("visualization_output"),
-    }
+    return {"final_labels": result.get("final_labels", {})}

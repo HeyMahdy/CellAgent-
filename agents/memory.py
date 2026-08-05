@@ -33,3 +33,4 @@ class CellAgentState(TypedDict):
     visualization_output: Dict[str, Any]
     evaluator_input: Dict[str, Any]
     evaluator_output: Dict[str, Any]
+    final_labels: Dict[str, str]

@@ -8,6 +8,11 @@ notebook transcript.
 
 from __future__ import annotations
 
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from typing import Any, Iterable
 
 from langchain_core.messages import HumanMessage, SystemMessage

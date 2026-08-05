@@ -120,7 +120,12 @@ def evaluator_node(state: CellAgentState) -> dict:
     ]
 
     result: EvaluationResult = structured_llm.invoke(messages)
+    final_labels = {
+        cluster.cluster_id: cluster.final_label
+        for cluster in result.clusters
+    }
     return {
         "evaluator_input": evaluator_input,
         "evaluator_output": result.model_dump(),
+        "final_labels": final_labels,
     }

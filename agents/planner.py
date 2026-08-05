@@ -1,5 +1,10 @@
 
 import json
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from langchain_core.messages import SystemMessage, HumanMessage
 import anndata as ad
 import numpy as np

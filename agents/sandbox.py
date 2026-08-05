@@ -11,7 +11,10 @@ import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
-
+from pathlib import Path
+from dataclasses import asdict
+import scanpy as sc
+import os
 import nbformat
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
@@ -146,10 +149,18 @@ def sandbox_node(state: dict) -> dict:
         return {"sandbox_result": None}
         
     current_step = state.get("current_task_index", 0)
+    
+    # --- SAFE ARTIFACT DIR FALLBACK ---
     artifact_dir = state.get("artifact_dir")
+    if not artifact_dir:
+        artifact_dir = Path("cellagent_artifacts")
+    else:
+        artifact_dir = Path(artifact_dir)
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    # ----------------------------------
     
     sandbox = NotebookSandbox(
-        artifact_dir=artifact_dir,
+        artifact_dir=str(artifact_dir),
         timeout_seconds=state.get("sandbox_timeout_seconds", 900),
         project_root=state.get("project_root"),
     )
@@ -163,12 +174,8 @@ def sandbox_node(state: dict) -> dict:
     payload = asdict(result)
     
     if result.success:
-
+        expected_artifact_path = artifact_dir / f"step_{current_step}_adata.h5ad"
         
-        
-        expected_artifact_path = Path(artifact_dir) / f"step_{current_step}_adata.h5ad"
-        
-
         updated_adata = sc.read_h5ad(expected_artifact_path)
         # --- END SYNC LOGIC ---
 
