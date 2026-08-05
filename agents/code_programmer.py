@@ -57,9 +57,13 @@ Rules:
   Executing the tools is the entirety of this subtask. Do not write any additional 
   custom coding, consensus evaluation, or downstream analysis after the tools are called.
 - When the subtask makes a meaningful change to adata, save it as
-  `save_adata(adata, ARTIFACT_DIR / f"step_{STEP_ID}_adata.h5ad")`. Never
-  call `adata.write_h5ad` directly: generated tables or nested dictionaries
-  in `adata.uns` can make an otherwise successful step impossible to save.
+    `save_adata(adata, ARTIFACT_DIR / f"step_{STEP_ID}_adata.h5ad")`.
+    `save_adata` is already defined by the sandbox in the notebook globals.
+    Never import it, never look it up through `globals()`, never wrap it in
+    `try/except`, and never fall back to `cellagent` or any other module.
+    Call the provided function directly. Never call `adata.write_h5ad` directly:
+    generated tables or nested dictionaries in `adata.uns` can make an otherwise
+    successful step impossible to save.
 - For quality-control steps, if you pass `qc_vars=["mt"]` to
   `scanpy.pp.calculate_qc_metrics`, you MUST first create the matching boolean
   variable annotation on the exact object passed to Scanpy; for example,

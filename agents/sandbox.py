@@ -54,8 +54,7 @@ class NotebookSandbox:
         self,
         code: str,
         *,
-        bootstrap_code: str,
-        successful_code: Iterable[str] = (),
+        dataset_path: str,
         step_id: int = 0,
     ) -> SandboxResult:
         """Execute candidate code and return serializable output/error details.
@@ -66,7 +65,8 @@ class NotebookSandbox:
         """
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
         setup = (
-            "import sys\n"
+          "import sys\n"
+            "import scanpy as sc\n"
             f"PROJECT_ROOT = {str(self.project_root)!r}\n"
             "if PROJECT_ROOT not in sys.path:\n"
             "    sys.path.insert(0, PROJECT_ROOT)\n"
@@ -74,14 +74,20 @@ class NotebookSandbox:
             f"ARTIFACT_DIR = Path({str(self.artifact_dir)!r})\n"
             "ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)\n"
             f"STEP_ID = {step_id}\n"
+            "if STEP_ID > 1:\n"
+            "    # Load previous step's artifact\n"
+            "    adata = sc.read_h5ad(ARTIFACT_DIR / f\"step_{STEP_ID - 1}_adata.h5ad\")\n"
+            "else:\n"
+            "    # Initial step: load raw dataset\n"
+            "    from data.ingest_dataset_to_anndata import ingest_dataset_to_anndata\n"
+            f"    adata = ingest_dataset_to_anndata({dataset_path!r})\n"
             "def save_adata(adata, path):\n"
             "    \"\"\"Save a portable analysis artifact without unsafe LLM metadata.\"\"\"\n"
             "    artifact = adata.copy()\n"
             "    artifact.write_h5ad(path)\n"
         )
         notebook = nbformat.v4.new_notebook(
-            cells=[nbformat.v4.new_code_cell(setup + "\n" + bootstrap_code)]
-            + [nbformat.v4.new_code_cell(previous) for previous in successful_code]
+            cells=[nbformat.v4.new_code_cell(setup)]
             + [nbformat.v4.new_code_cell(code)],
             metadata={"kernelspec": {"name": self.kernel_name, "display_name": "Python 3"}},
         )
@@ -145,8 +151,7 @@ def sandbox_node(state: dict) -> dict:
     )
     result = sandbox.execute(
         proposal["code"],
-        bootstrap_code=state["sandbox_bootstrap_code"],
-        successful_code=[item["code"] for item in state.get("global_code_memory", [])],
+        dataset_path=state["dataset_path"],
         step_id=state.get("current_task_index", 0),
     )
     payload = asdict(result)

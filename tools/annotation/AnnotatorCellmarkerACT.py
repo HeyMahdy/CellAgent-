@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import scanpy as sc
 import anndata
 import psycopg2 # Required for PostgreSQL connection

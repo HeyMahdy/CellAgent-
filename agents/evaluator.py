@@ -9,7 +9,6 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from agents.annotation_output import _latest_adata_artifact
 from agents.memory import CellAgentState
 from agents.evaluator_prompt import EVALUATOR_SYSTEM_PROMPT
 
@@ -31,6 +30,8 @@ class EvaluationResult(BaseModel):
 llm = ChatOpenAI(model="gpt-5.4-mini", temperature=0)
 structured_llm = llm.with_structured_output(EvaluationResult)
 
+ANNOTATED_ADATA_PATH = "/content/cellagent_artifacts/step_6_adata.h5ad"
+
 
 def _json_value(value):
     if pd.isna(value):
@@ -39,11 +40,7 @@ def _json_value(value):
 
 
 def _build_evaluator_input(state: CellAgentState) -> dict:
-    artifact = _latest_adata_artifact(state)
-    if artifact is None:
-        raise ValueError("No saved AnnData artifact is available for evaluation.")
-
-    adata = ad.read_h5ad(artifact)
+    adata = ad.read_h5ad(ANNOTATED_ADATA_PATH)
     if "rank_genes_groups" not in adata.uns:
         raise ValueError("The final AnnData artifact is missing rank_genes_groups.")
 
@@ -101,16 +98,7 @@ def _build_evaluator_input(state: CellAgentState) -> dict:
             "tool_predictions": tool_predictions,
         })
 
-    annotation_subtask = next(
-        (
-            task for task in reversed(state.get("planner_output", []))
-            if isinstance(task, dict)
-            and "annotat" in str(task.get("action", "")).lower()
-        ),
-        None,
-    )
     return {
-        "annotation_subtask": annotation_subtask,
         "cluster_key": str(cluster_key),
         "marker_groupby": str(cluster_key),
         "clusters": clusters,
